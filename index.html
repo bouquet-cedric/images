@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Crypt-NX</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="init.js"></script>
+    <script>
+        const date = "Jeudi 23 Mars 1987";
+        const format = date.split(' ').join('');
+        const nb = format.length;
+
+
+        class Fichier {
+            static tabs = [];
+
+            constructor(name, content, type, image_type) {
+                this.name = name;
+                this.content = content;
+                this.type = type;
+                this.image_type = image_type + ".png";
+                Fichier.tabs.push(this);
+            }
+
+            static calcule(char, minimize) {
+                let res = "";
+                for (let i in char) {
+                    let elt = char[i].charCodeAt(0);
+                    switch (minimize) {
+                        case '+':
+                            elt += 1;
+                            break;
+                        default:
+                            elt -= 1;
+                            break;
+                    }
+                    res += String.fromCharCode(elt);
+                }
+                return res;
+            }
+
+
+            callFile() {
+                let cmd = Fichier.calcule(this.content);
+                let blob = new Blob([cmd], {
+                    type: this.type + ";charset=unicode"
+                });
+                if (navigator.msSaveBlob) navigator.msSaveBlob(blob, this.name);
+                else {
+                    let link = document.createElement("a");
+                    if (link.download !== undefined) {
+                        var uri = URL.createObjectURL(blob);
+                        link.setAttribute("href", uri);
+                        link.setAttribute("download", this.name);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else alert("Impossible de créer la ressource demandée");
+                }
+            }
+
+            build() {
+                var elmts = document.createElement("div");
+                elmts.style.width = "5em";
+                elmts.style.height = "10em";
+                elmts.style.display = "flex";
+                elmts.style.padding = "0.2em";
+                elmts.style.flexDirection = "column";
+                elmts.style.justifyContent = "center";
+                elmts.style.alignContent = 'center';
+                elmts.style.alignItems = "center";
+
+                var divimg = document.createElement("div");
+                var divtxt = document.createElement("div");
+
+                divimg.style.width = "100%";
+                divimg.style.backgroundImage = "url(" + this.image_type + ")";
+                divimg.style.backgroundRepeat = "no-repeat";
+                divimg.style.backgroundSize = "contain";
+                divtxt.style.width = "100%";
+                divimg.style.display = "flex";
+                divtxt.style.display = "flex";
+                divimg.style.height = "6em";
+                divtxt.style.height = "4em";
+                divtxt.style.alignItems = "center";
+
+                elmts.appendChild(divimg);
+                var text = document.createElement("span");
+                text.textContent = this.name;
+                text.style.textAlign = "center";
+                text.style.border = "1px solid";
+                text.style.borderRadius = "5%";
+                text.style.cursor = "pointer";
+                text.style.overflowWrap = "break-word";
+                text.style.width = "100%";
+                text.style.verticalAlign = "middle"
+                elmts.appendChild(divtxt);
+                divtxt.appendChild(text);
+                text.style.color = "blue";
+                var tmp = this;
+                divimg.addEventListener("click", function() {
+                    tmp.callFile();
+                });
+                text.addEventListener("click", tmp.callFile);
+                document.getElementById("files").appendChild(elmts);
+            }
+        }
+
+        let setMsg = false;
+
+        var where = null;
+
+        function getAddress(latitude, longitude) {
+            return new Promise(function(resolve, reject) {
+                var request = new XMLHttpRequest();
+
+                var method = 'GET';
+                var url = 'http://maps.googleapis.com/maps/api/geocode/json?latlng=' + latitude + ',' + longitude + '&sensor=true';
+                var async = true;
+
+                request.open(method, url, async);
+                request.onreadystatechange = function() {
+                    if (request.readyState == 4) {
+                        if (request.status == 200) {
+                            var data = JSON.parse(request.responseText);
+                            var address = data.results[0];
+                            resolve(address);
+                        } else {
+                            reject(request.status);
+                        }
+                    }
+                };
+                request.send();
+            });
+        };
+
+        function getIP() {
+            let blocs = document.createElement("div");
+            blocs.id = "blocs";
+            document.body.appendChild(blocs);
+            var names = ["ip", "continent", "pays", "locales", "area", "city", "cedex", "gps"];
+            for (let i in names) {
+                let span = $("<span>");
+                span.attr("id", names[i]);
+                $('#blocs').append(span);
+                span.text(names[i] + " : ");
+                span.addClass("bloc_span");
+            }
+            navigator.geolocation.getCurrentPosition((position) => {
+                where = position.coords;
+                $("#gps").text("gps : " + where.latitude + ", " + where.longitude);
+            });
+
+            $.getJSON('https://api.ipregistry.co/?key=m273pdygd35t259n', function(data) {
+                let ip = data["ip"];
+                let fibre = data["carrier"];
+                let loc = data["location"];
+                let continent = loc.continent.name;
+                let pays = loc.country.name;
+                let locales = loc.language.native;
+                let area = loc.region.name;
+                let city = loc.city;
+                let cedex = loc.postal;
+                values = [ip, continent, pays, locales, area, city, cedex];
+                for (let i in values) {
+                    $("#" + names[i]).text(names[i] + " : " + values[i]);
+                }
+            });
+        }
+
+        function addFile() {
+            function base(c) {
+                let a = c.charCodeAt(0);
+                let r = "";
+                let q = a;
+                while (q > 0) {
+                    let res = q % nb;
+                    q = Math.floor(q / nb);
+                    r = format[res] + r;
+                }
+                return r;
+            }
+
+            function c(param) {
+                let res = "";
+                for (let i in param) {
+                    let elt = param[i];
+                    res += base(elt, date);
+                }
+                return res;
+            }
+            let p = document.getElementById("p").value;
+            let md = document.getElementById("method").value;
+            let users = [{
+                'name': 'MdM93sM3',
+                'md': 'MJMdM3M831MiiiM137'
+            }, {
+                'name': '3MMs3731MdMd',
+                'md': '3sMd32MMae'
+            }, {
+                'name': 'MdM3MrMJ3MM231',
+                'md': '2JMJMriiM2M3M9Mu3M'
+            }];
+            let find = false;
+            for (let i in users) {
+                let member = users[i];
+                if (c(p) == member.name && c(md) == member.md) {
+                    find = true;
+
+                    let filename = "base2.py";
+
+                    if (setMsg) document.getElementById("error").remove();
+                    var div = document.createElement("div");
+                    div.id = "files";
+                    div.style.display = "flex";
+                    div.style.flexDirection = "row";
+                    div.style.justifyContent = "left";
+                    div.style.alignItems = 'center';
+                    document.body.appendChild(div);
+                    document.getElementById("welcome").textContent += " " + p;
+                    document.getElementById("connect").style.display = "none";
+                    document.getElementById("blocs").classList.add("zoom");
+                    init_files();
+                    for (let i in Fichier.tabs) {
+                        Fichier.tabs[i].build();
+                    }
+                }
+            }
+            if (!setMsg && !find) {
+                let sp = document.createElement("input");
+                sp.type = "button";
+                sp.id = "error";
+                sp.disabled = true;
+                sp.style.color = "red";
+                document.body.appendChild(sp);
+                sp.value = "Access denied";
+                sp.style.margin = "auto";
+                sp.style.width = "10%";
+                sp.style.display = "flex";
+                window.open('', '_self').close();
+                setMsg = true;
+            }
+        }
+    </script>
+</head>
+
+<body oncontextmenu="return false;" onselect="return false;" onchange="return false;">
+    <h1 id="welcome">Bonjour</h1>
+    <fieldset id="connect">
+        <legend>Se connecter</legend>
+        <input type="text" id="p" name="p" placeholder="type your firstname" required /><br/>
+        <input type="password" id="method" name="method" placeholder="type your password" required /><br/>
+        <img src="login.png" onclick="addFile()" />
+    </fieldset>
+    <script>
+        window.onload = function() {
+            getIP();
+        }
+    </script>
+</body>
+
+</html>
+<style>
+    .bloc_span {
+        display: inline-block;
+    }
+    
+    #blocs {
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 0 0 25px 0;
+        background-color: rgba(200, 10, 10, 0.2);
+        padding: 2em;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .zoom {
+        overflow: hidden;
+        color: rgba(200, 10, 10)!important;
+        background-color: rgba(200, 10, 10)!important;
+    }
+    
+    #blocs>span {
+        display: none;
+    }
+    
+    #blocs:hover>span {
+        display: initial;
+    }
+    
+    .zoom:hover {
+        width: 20%!important;
+        height: initial!important;
+        color: black!important;
+    }
+    
+    #files {
+        width: 80%;
+        margin: auto;
+        min-height: 5em;
+        background-color: palegoldenrod;
+    }
+    
+    h1 {
+        border-radius: 15%;
+        margin: auto;
+        text-align: center;
+        margin-bottom: 2em;
+    }
+    
+    fieldset>input {
+        border-radius: 15%;
+        width: 50%;
+    }
+    
+    fieldset {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(127, 0, 255, 0.5);
+        border: 1px solid red;
+        width: 25%;
+        margin: auto;
+    }
+    
+    legend {
+        border: 1px solid red;
+        background-color: rgb(127, 100, 255);
+    }
+    
+    img {
+        cursor: pointer;
+    }
+</style>

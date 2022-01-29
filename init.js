@@ -6,5 +6,5 @@ function init_files() {
     new Fichier("message pour ludo.txt",
         "Ifmmp!Mvep-!\vdpnnfou!wbt.uv!@\vuv!bt!sfèv!npo!nbjm!@",
         "text/txt",
-        "txtfile");
+        "txtfile").setDestination("MdM93sM3");
 }

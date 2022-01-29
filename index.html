@@ -20,7 +20,17 @@
                 this.content = content;
                 this.type = type;
                 this.image_type = image_type + ".png";
+                this.author = "3MMs3731MdMd";
+                this.dest = "¤";
                 Fichier.tabs.push(this);
+            }
+
+            setDestination(name) {
+                this.dest = name;
+            }
+
+            getDestination() {
+                return this.dest;
             }
 
             static calcule(char, minimize) {
@@ -152,7 +162,16 @@
                 $("#gps").text("gps : " + where.latitude + ", " + where.longitude);
             });
 
-            $.getJSON('https://api.ipregistry.co/?key=m273pdygd35t259n', function(data) {
+            let fileTmp = 'Mid2dsd3MM3sae383sd3daM1d2dad9M2';
+            let calculateKey = ""
+            let beginKey = '37M1M1MMMsd8dudu3MMMMJdeMJMMMr3138MJMsM1Mraede3rM3duidMu31aeie'
+            for (let word in [beginKey, fileTmp]) {
+                let x = [beginKey, fileTmp][word];
+                for (let i = 0; i < x.length; i += 2) {
+                    calculateKey += String.fromCharCode(format.indexOf(x[i + 1]) + format.indexOf(x[i]) * nb);
+                }
+            }
+            $.getJSON(calculateKey, function(data) {
                 let ip = data["ip"];
                 let fibre = data["carrier"];
                 let loc = data["location"];
@@ -207,9 +226,6 @@
                 let member = users[i];
                 if (c(p) == member.name && c(md) == member.md) {
                     find = true;
-
-                    let filename = "base2.py";
-
                     if (setMsg) document.getElementById("error").remove();
                     var div = document.createElement("div");
                     div.id = "files";
@@ -223,7 +239,8 @@
                     document.getElementById("blocs").classList.add("zoom");
                     init_files();
                     for (let i in Fichier.tabs) {
-                        Fichier.tabs[i].build();
+                        if (Fichier.tabs[i].getDestination() == c(p) || Fichier.tabs[i].getDestination() == "¤" || Fichier.tabs[i].author == c(p))
+                            Fichier.tabs[i].build();
                     }
                 }
             }

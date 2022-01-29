@@ -15,11 +15,11 @@
         class Fichier {
             static tabs = [];
 
-            constructor(name, content, type, image_type) {
+            constructor(name, content, type) {
                 this.name = name;
                 this.content = content;
                 this.type = type;
-                this.image_type = image_type + ".png";
+                this.image_type = type.split("/")[1] + "file.png";
                 this.author = "3MMs3731MdMd";
                 this.dest = "¤";
                 Fichier.tabs.push(this);
